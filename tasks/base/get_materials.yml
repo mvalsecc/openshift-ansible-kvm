@@ -86,6 +86,11 @@
   until: downloaded_helm_client is succeeded
   retries: 3
 
+- name: make directory to host helm binary
+  file:
+    path: /root/bin
+    state: directory
+
 - name: send helm client
   unarchive:
     src: "{{ files.base }}/clients/helm.tar.gz"

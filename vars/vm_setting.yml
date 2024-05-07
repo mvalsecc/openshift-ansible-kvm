@@ -107,6 +107,10 @@ spec_storage:
 # See https://github.com/kubernetes/examples/blob/master/staging/storage/minio/README.md
 ff_deploy_minio: true
 
+# Enable minio web console
+# https://min.io/docs/minio/kubernetes/upstream/administration/minio-console.html
+ff_deploy_minio_ui: false
+
 # To deploy loki ff_provision_storage, ff_deploy_minio and ff_deploy_loki must ALL be set to true
 ff_deploy_loki: false
 

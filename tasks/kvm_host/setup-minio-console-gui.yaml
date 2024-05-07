@@ -1,0 +1,53 @@
+---
+# Enable minio web console
+# https://min.io/docs/minio/kubernetes/upstream/administration/minio-console.html
+- name: Expose minio web console
+  shell: >-
+    /root/bin/oc patch deployment minio-deployment -n default --type='json' -p='[
+      {
+        "op": "add",
+        "path": "/spec/template/spec/containers/0/ports/-",
+        "value": {
+          "containerPort": 9001,
+          "protocol": "TCP"
+        }
+      },
+      {
+        "op": "replace",
+        "path": "/spec/template/spec/containers/0/args",
+        "value": [
+          "server",
+          "/storage",
+          "--console-address",
+          ":9001"
+        ]
+      }
+    ]'
+    wget https://raw.githubusercontent.com/kubernetes/examples/master/staging/storage/minio/minio-standalone-service.yaml -O minio-gui.yaml;
+    sed -i 's/minio-service/minio-gui/' minio-gui.yaml ;
+    sed -i 's/9000/9001/' minio-gui.yaml ;
+    oc apply -f minio-gui.yaml -n default;
+    /root/bin/oc expose svc minio-gui -n default;
+    rm minio-gui.yaml;
+  environment:
+    KUBECONFIG: "{{ files.kvm }}/bare-metal/auth/kubeconfig"
+
+- name: Create minio bucket for loki
+  shell: >-
+    curl https://dl.min.io/client/mc/release/linux-amd64/mc   --create-dirs   -o $HOME/minio-binaries/mc
+    chmod +x $HOME/minio-binaries/mc
+    export PATH=$PATH:$HOME/minio-binaries/
+    mc alias set myminio http://minio-service-default.apps.test.lab.local minio minio123
+    mc admin info myminio
+    mc mb myminio/loki-bucket
+
+    echo "I am a test" >> very-important-file.txt
+    cat very-important-file.txt
+    mc mb myminio/test-bucket
+    mc cp very-important-file.txt myminio/test-bucket
+    mc ls myminio/test-bucket
+    mc cat myminio/test-bucket/very-important-file.txt
+
+    /root/bin/oc create secret generic logging-loki-minio --from-literal=bucketnames="loki-bucket" --from-literal=endpoint="http://minio-service-default.apps.test.lab.local" --from-literal=access_key_id="minio" --from-literal=access_key_secret="minio123" -n openshift-operators-redhat
+  environment:
+    KUBECONFIG: "{{ files.kvm }}/bare-metal/auth/kubeconfig"

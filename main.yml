@@ -53,7 +53,7 @@
         - ff_provision_storage is defined
         - ff_provision_storage == true
 
- # Install Minio
+# Install Minio
 - hosts: kvm_host
   gather_facts: yes
   vars_files:
@@ -67,3 +67,20 @@
         - ff_provision_storage == true
         - ff_deploy_minio is defined
         - ff_deploy_minio == true
+
+# Enable Minio web console
+- hosts: kvm_host
+  gather_facts: yes
+  vars_files:
+    - vars/config.yml
+    - vars/vm_setting.yml
+    - vars/download.yml
+  tasks:
+    - include_tasks: tasks/kvm_host/setup-minio-console-gui.yaml
+      when: 
+        - ff_provision_storage is defined
+        - ff_provision_storage == true
+        - ff_deploy_minio is defined
+        - ff_deploy_minio == true
+        - ff_deploy_minio_ui is defined
+        - ff_deploy_minio_ui == true
